@@ -27,15 +27,8 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
-        
         html, body { overflow-x: hidden; touch-action: manipulation; width: 100%; }
-
-        body { 
-            background-color: var(--bg-main); color: var(--text-main); display: flex; 
-            flex-direction: column; justify-content: center; min-height: 100vh; 
-            padding: 15px; transition: background 0.3s, color 0.3s; 
-        }
-        
+        body { background-color: var(--bg-main); color: var(--text-main); display: flex; flex-direction: column; justify-content: center; min-height: 100vh; padding: 15px; transition: background 0.3s, color 0.3s; }
         .container { width: 100%; max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
 
         .header { display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 15px; border-radius: 16px; border: 1px solid var(--border-color); flex-wrap: wrap; gap: 10px; }
@@ -74,13 +67,11 @@
         .room-header-edit { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 12px; gap: 10px;}
         .input-room-name { background: transparent; border: none; border-bottom: 2px dashed var(--border-color); color: var(--warning); font-size: 15px; font-weight: 800; font-family: var(--font-mono); outline: none; width: 100%; padding-bottom: 5px; }
         .input-room-name:focus { border-bottom: 2px solid var(--warning); }
-        
+
         .player-item { background: var(--slot-empty-bg); border-radius: 8px; border: 1px solid var(--slot-empty-border); padding: 10px; margin-bottom: 10px; transition: 0.2s; width: 100%; }
         .player-item:hover { border-color: var(--accent-color); }
-        
         .player-header { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
         .player-info { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 140px; }
-        
         .input-player-name, .input-player-id { background: transparent; border: none; color: var(--text-main); font-family: var(--font-mono); outline: none; border-bottom: 1px dashed var(--slot-empty-border); padding: 4px 0; transition: 0.2s; width: 100%; }
         .input-player-name:focus, .input-player-id:focus { border-bottom: 2px solid var(--accent-color); background: rgba(88,166,255,0.05); }
         .input-player-name { font-size: 13px; font-weight: bold; }
@@ -103,20 +94,16 @@
         .btn-slider-adjust { background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); width: 26px; height: 26px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; display: flex; justify-content: center; align-items: center; transition: 0.2s; font-family: var(--font-mono); flex-shrink: 0;}
         .btn-slider-adjust:hover { background: var(--border-color); color: var(--accent-color); }
         .btn-slider-adjust:active { background: var(--accent-color); color: #000; }
-        
         input[type=range] { -webkit-appearance: none; flex: 1; background: transparent; height: 8px; width: 100%; min-width: 0; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: #ffffff; cursor: pointer; margin-top: -3px; border: 2px solid var(--accent-color); box-shadow: 0 0 8px rgba(255,255,255,0.4); }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; border-radius: 4px; }
 
         .room-action-box { display: flex; gap: 8px; margin-top: 12px; border-top: 1px dashed var(--border-color); padding-top: 12px; flex-wrap: wrap; align-items: stretch; width: 100%;}
         .btn-room-action { padding: 8px; border-radius: 8px; border: none; font-weight: bold; font-family: var(--font-mono); cursor: pointer; transition: 0.2s; font-size: 11px; display: flex; justify-content: center; align-items: center; flex: 1; min-width: 70px;}
-        
         .btn-add-slot { background-color: var(--accent-glow); color: var(--accent-color); border: 1px dashed var(--accent-color); z-index: 10;}
         .btn-add-slot:hover { background-color: var(--accent-color); color: #000; }
-        
         .btn-reduce-all { background-color: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color); }
         .btn-reduce-all:hover { background-color: var(--border-color); }
-        
         .btn-delete-room { background-color: rgba(248, 81, 73, 0.1); color: var(--danger); border: 1px solid rgba(248, 81, 73, 0.3); z-index: 10; flex: 0.5; }
         .btn-delete-room:hover { background-color: rgba(248, 81, 73, 0.2); }
 
@@ -259,9 +246,11 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        // BIN ID BARU (PUBLIC)
+        // ==========================================
+        // KUNCI AKSES & ID BIN (DAH DIKEMAS KINI)
+        // ==========================================
         const JSONBIN_ACCESS_KEY = "$2a$10$9tvQukd6KauXb61CYxkf9.Ep0egoB96QcrcVMuP0R3K.FkFcT8M9q"; 
-        const JSONBIN_BIN_ID = "6afd4460ac6210605a90c50b"; // ID BIN PUBLIC BARU
+        const JSONBIN_BIN_ID = "6afd4460ac6210605a90c50b"; 
 
         let cloudData = { users: [], rooms: {} }; 
         let currentUser = null;
@@ -331,7 +320,6 @@
             }
         }
 
-        // Fungsi Ambil Data (TANPA HEADER - BIN PUBLIC)
         async function fetchCloudData() {
             try {
                 const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`);
@@ -349,7 +337,6 @@
             }
         }
 
-        // Fungsi Simpan Data (GUNA HEADER - PERLU KEBENARAN UPDATE)
         async function saveCloudData() {
             try {
                 const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {

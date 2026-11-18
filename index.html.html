@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <!-- KUNCI SKRIN UNTUK PHONE (HALANG ZOOM KIRI KANAN) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MLBB Boosting SaaS - Squad Tracker</title>
+    <style>
+        /* =================================================================
+           VARIABLES TEMA
+           ================================================================= */
+        :root {
+            --bg-main: #05080d; --bg-card: #0d1117; --bg-input: #010409;
+            --border-color: #30363d; --text-main: #e6edf3; --text-muted: #8b949e;
+            --accent-color: #58a6ff; --accent-glow: rgba(88, 166, 255, 0.2);
+            --success: #238636; --danger: #f85149; --warning: #d29922;
+            --font-mono: 'Consolas', 'Courier New', monospace;
+            --slot-empty-bg: #161b22; 
+            --slot-empty-border: #444c56;
+        }
+        .theme-matrix {
+            --bg-main: #000000; --bg-card: #050505; --bg-input: #000000; --border-color: #1a3c1a;
+            --text-main: #a8ffb2; --text-muted: #4a7c50; --accent-color: #00ff41;
+            --accent-glow: rgba(0, 255, 65, 0.2); --success: #00ff41; --warning: #39ff14;
+            --slot-empty-bg: #0a1a0a; --slot-empty-border: #2a5a2a;
+        }
+        .theme-red {
+            --bg-main: #0a0000; --bg-card: #140000; --bg-input: #000000; --border-color: #4a1a1a;
+            --text-main: #ffb3b3; --text-muted: #8a5a5a; --accent-color: #ff3333;
+            --accent-glow: rgba(255, 51, 51, 0.2); --success: #cc0000; --danger: #ff0000; --warning: #ff9900;
+            --slot-empty-bg: #1f0a0a; --slot-empty-border: #5a2a2a;
+        }
+
+        /* --- ASAS & KUNCI SKRIN PHONE --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
+        
+        html, body { 
+            overflow-x: hidden; /* Halang skrol kiri kanan */
+            touch-action: manipulation; /* Halang double-tap zoom */
+            width: 100%;
+        }
+
+        body { 
+            background-color: var(--bg-main); 
+            color: var(--text-main); 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            min-height: 100vh; 
+            padding: 15px; 
+            transition: background 0.3s, color 0.3s; 
+        }
+        
+        .container { 
+            width: 100%; 
+            max-width: 600px; 
+            margin: 0 auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 20px; 
+        }
+
+        /* --- HEADER --- */
+        .header { display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 15px; border-radius: 16px; border: 1px solid var(--border-color); flex-wrap: wrap; gap: 10px; }
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        .logo { width: 40px; height: 40px; background-color: var(--bg-input); border-radius: 10px; display: flex; justify-content: center; align-items: center; border: 1px solid var(--border-color); overflow: hidden; padding: 0; }
+        .logo img { width: 100%; height: 100%; object-fit: cover; }
+        .title h1 { font-size: 16px; color: var(--text-main); font-weight: 800; font-family: var(--font-mono); }
+        .title p { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+        /* --- BUTANG HEADER --- */
+        .header-actions { display: flex; align-items: center; gap: 8px; }
+        .btn-theme { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 14px; transition: 0.2s; }
+        .btn-theme:hover { border-color: var(--accent-color); color: var(--accent-color); }
+        .btn-auth { background-color: transparent; color: var(--text-muted); border: 1px solid var(--border-color); padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; font-family: var(--font-mono); }
+        .btn-logout { color: var(--danger); }
+
+        /* --- PAPARAN AUTH --- */
+        .auth-view { display: flex; flex-direction: column; gap: 15px; justify-content: center; align-items: center; min-height: 50vh; width: 100%; }
+        .auth-box { background-color: var(--bg-card); padding: 20px; border-radius: 16px; border: 1px solid var(--border-color); width: 100%; max-width: 400px; text-align: center; }
+        .auth-box h2 { margin-bottom: 15px; font-size: 18px; font-family: var(--font-mono); }
+        .auth-box input { width: 100%; padding: 12px; margin-bottom: 15px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); outline: none; font-family: var(--font-mono); }
+        .btn-main-auth { width: 100%; padding: 12px; background: var(--success); color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-family: var(--font-mono); font-size: 14px;}
+        .auth-box p { font-size: 12px; color: var(--text-muted); cursor: pointer; }
+        .auth-box p span { color: var(--accent-color); font-weight: bold; }
+
+        /* --- PASSWORD TOPENG --- */
+        .password-wrapper { position: relative; width: 100%; margin-bottom: 15px; }
+        .password-wrapper input { margin-bottom: 0; padding-right: 45px; } 
+        .toggle-password { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 18px; color: var(--text-muted); }
+
+        /* --- DASHBOARD --- */
+        .role-toggle { display: none; background: var(--bg-input); border-radius: 8px; border: 1px solid var(--border-color); overflow: hidden; margin-top: 10px; width: 100%; }
+        .role-btn { flex: 1; padding: 10px; font-size: 12px; border: none; background: transparent; color: var(--text-muted); cursor: pointer; font-weight: bold; font-family: var(--font-mono); }
+        .role-btn.active { background: var(--bg-card); color: var(--accent-color); border-bottom: 2px solid var(--accent-color); }
+
+        .admin-view { display: none; width: 100%; }
+        .customer-view { display: none; width: 100%; }
+
+        /* --- ROOM CARD --- */
+        .room-card { background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 16px; padding: 12px; margin-bottom: 20px; position: relative; width: 100%; }
+        
+        .room-header-edit { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 12px; gap: 10px;}
+        .input-room-name { background: transparent; border: none; border-bottom: 2px dashed var(--border-color); color: var(--warning); font-size: 15px; font-weight: 800; font-family: var(--font-mono); outline: none; width: 100%; padding-bottom: 5px; }
+        .input-room-name:focus { border-bottom: 2px solid var(--warning); }
+        
+        /* --- SLOT PLAYER --- */
+        .player-item { background: var(--slot-empty-bg); border-radius: 8px; border: 1px solid var(--slot-empty-border); padding: 10px; margin-bottom: 10px; transition: 0.2s; width: 100%; }
+        .player-item:hover { border-color: var(--accent-color); }
+        
+        .player-header { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
+        .player-info { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 140px; }
+        
+        .input-player-name, .input-player-id { 
+            background: transparent; border: none; color: var(--text-main); font-family: var(--font-mono); outline: none; 
+            border-bottom: 1px dashed var(--slot-empty-border); padding: 4px 0; transition: 0.2s; width: 100%;
+        }
+        .input-player-name:focus, .input-player-id:focus { border-bottom: 2px solid var(--accent-color); background: rgba(88,166,255,0.05); }
+        .input-player-name { font-size: 13px; font-weight: bold; }
+        .input-player-id { font-size: 11px; color: var(--text-muted); }
+        .input-player-name::placeholder, .input-player-id::placeholder { color: var(--text-muted); opacity: 0.7; font-style: italic; }
+
+        .player-controls { display: flex; align-items: center; gap: 8px; }
+        .max-match-box { display: flex; align-items: center; gap: 4px; background: var(--bg-main); padding: 4px 6px; border-radius: 6px; border: 1px solid var(--border-color); }
+        .max-match-box span { font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); }
+        .input-max-match { background: transparent; border: none; color: var(--text-main); font-family: var(--font-mono); font-weight: bold; width: 28px; text-align: center; outline: none; font-size: 12px;}
+        .input-max-match:focus { color: var(--accent-color); }
+
+        .btn-del-player { 
+            background: transparent; border: none; color: var(--danger); cursor: pointer; font-size: 14px; padding: 4px;
+            display: flex; align-items: center; justify-content: center; transition: 0.2s; z-index: 10;
+        }
+        .btn-del-player:hover { color: #ff9999; transform: scale(1.1); }
+
+        /* --- RANK SELECT DALAM PLAYER --- */
+        .player-rank-row { margin-top: 5px; margin-bottom: 8px; }
+        .select-rank-inline {
+            width: 100%; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--accent-color);
+            font-family: var(--font-mono); font-size: 11px; padding: 5px 8px; border-radius: 6px; outline: none; cursor: pointer;
+        }
+
+        /* --- SLIDER + BUTANG - / + --- */
+        .slider-control-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; width: 100%; }
+        .btn-slider-adjust { background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); width: 26px; height: 26px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; display: flex; justify-content: center; align-items: center; transition: 0.2s; font-family: var(--font-mono); flex-shrink: 0;}
+        .btn-slider-adjust:hover { background: var(--border-color); color: var(--accent-color); }
+        .btn-slider-adjust:active { background: var(--accent-color); color: #000; }
+        
+        input[type=range] { -webkit-appearance: none; flex: 1; background: transparent; height: 8px; width: 100%; min-width: 0; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: #ffffff; cursor: pointer; margin-top: -3px; border: 2px solid var(--accent-color); box-shadow: 0 0 8px rgba(255,255,255,0.4); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; border-radius: 4px; }
+
+        /* --- BUTANG TINDAKAN ROOM --- */
+        .room-action-box { display: flex; gap: 8px; margin-top: 12px; border-top: 1px dashed var(--border-color); padding-top: 12px; flex-wrap: wrap; align-items: stretch; width: 100%;}
+        .btn-room-action { padding: 8px; border-radius: 8px; border: none; font-weight: bold; font-family: var(--font-mono); cursor: pointer; transition: 0.2s; font-size: 11px; display: flex; justify-content: center; align-items: center; flex: 1; min-width: 70px;}
+        
+        .btn-add-slot { background-color: var(--accent-glow); color: var(--accent-color); border: 1px dashed var(--accent-color); z-index: 10;}
+        .btn-add-slot:hover { background-color: var(--accent-color); color: #000; }
+        
+        .btn-reduce-all { background-color: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color); }
+        .btn-reduce-all:hover { background-color: var(--border-color); }
+        
+        .btn-delete-room { 
+            background-color: rgba(248, 81, 73, 0.1); color: var(--danger); border: 1px solid rgba(248, 81, 73, 0.3); 
+            z-index: 10; flex: 0.5;
+        }
+        .btn-delete-room:hover { background-color: rgba(248, 81, 73, 0.2); }
+
+        /* --- CUSTOMER VIEW --- */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+        .stat-card { background-color: var(--bg-card); padding: 12px; border-radius: 14px; border: 1px solid var(--border-color); }
+        .stat-card span { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);}
+        .stat-card strong { font-size: 18px; color: var(--text-main); font-family: var(--font-mono); }
+        .stat-card.highlight { border-color: var(--success); }
+        .stat-card.highlight strong { color: var(--success); }
+
+        .public-card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 12px; margin-bottom: 12px; width: 100%; }
+        .public-card-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .public-card-header h3 { font-size: 14px; font-family: var(--font-mono); color: var(--accent-color); }
+        .public-player { display: flex; justify-content: space-between; font-size: 11px; font-family: var(--font-mono); padding: 4px 0; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 5px;}
+
+        /* --- BUTANG TAMBAH ROOM BESAR --- */
+        .btn-add-room { background-color: var(--warning); color: #000; border: none; width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; font-family: var(--font-mono); cursor: pointer; margin-bottom: 15px; font-size: 13px;}
+
+        /* --- KOTAK BUTANG SHARE LINK --- */
+        .share-box {
+            background: var(--bg-card);
+            border: 1px dashed var(--accent-color);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+        }
+        .share-box p {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+            font-family: var(--font-mono);
+        }
+        .btn-share { 
+            background-color: var(--accent-glow); 
+            color: var(--accent-color); 
+            border: 1px solid var(--accent-color); 
+            padding: 10px; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            font-family: var(--font-mono); 
+            cursor: pointer; 
+            width: 100%; 
+            transition: 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+        .btn-share:hover { 
+            background-color: var(--accent-color); 
+            color: #000; 
+        }
+
+        /* =================================================================
+           POPUP MODAL
+           ================================================================= */
+        .custom-modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(4px);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+            padding: 20px;
+        }
+        .custom-modal-overlay.show { opacity: 1; pointer-events: auto; }
+
+        .custom-modal {
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: 16px; width: 100%; max-width: 350px; padding: 20px;
+            text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            transform: translateY(20px) scale(0.95); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .custom-modal-overlay.show .custom-modal { transform: translateY(0) scale(1); }
+
+        .custom-modal-icon { font-size: 35px; margin-bottom: 15px; color: var(--danger); }
+        .custom-modal h3 { font-size: 16px; color: var(--text-main); margin-bottom: 10px; font-family: var(--font-mono); }
+        .custom-modal p { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
+
+        .custom-modal-actions { display: flex; gap: 10px; justify-content: center; }
+        .btn-custom-modal { flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: bold; font-family: var(--font-mono); cursor: pointer; transition: 0.2s; font-size: 12px;}
+        .btn-custom-cancel { background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color); }
+        .btn-custom-cancel:hover { background: var(--border-color); }
+        .btn-custom-danger { background: rgba(248, 81, 73, 0.15); color: var(--danger); border: 1px solid rgba(248, 81, 73, 0.4); }
+        .btn-custom-danger:hover { background: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(248, 81, 73, 0.4); }
+
+        /* --- TOAST NOTIFICATION --- */
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--success); color: #fff; padding: 12px 24px; border-radius: 8px; font-family: var(--font-mono); font-size: 12px; font-weight: bold; z-index: 2000; opacity: 0; transition: all 0.3s ease; pointer-events: none; text-align: center; width: 80%; max-width: 300px; }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    </style>
+</head>
+<body class="theme-dark">
+
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header" id="mainHeader" style="display: none;">
+            <div class="header-left">
+                <div class="logo"><img src="https://i.postimg.cc/k5gkbnXQ/background.png" alt="Logo"></div>
+                <div class="title">
+                    <h1 id="businessNameDisplay">MLBB TRACKER</h1>
+                    <p>Squad Room Tracker</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn-theme" id="themeToggleBtn" onclick="cycleTheme()">🌙</button>
+                <button class="btn-auth btn-logout" onclick="logout()">Log Out</button>
+            </div>
+        </div>
+
+        <!-- ================= LOGIN / DAFTAR ================= -->
+        <div id="authView" class="auth-view">
+            <div class="header" style="width:100%; max-width: 400px; justify-content: center;">
+                <div class="header-left">
+                    <div class="logo"><img src="https://i.postimg.cc/k5gkbnXQ/background.png" alt="Logo"></div>
+                    <div class="title"><h1>MLBB TRACKER</h1><p>Sistem Squad Mabar</p></div>
+                </div>
+            </div>
+
+            <div class="auth-box" id="loginBox">
+                <h2>Log Masuk Admin</h2>
+                <input type="text" id="loginUsername" placeholder="Username Admin">
+                <div class="password-wrapper">
+                    <input type="password" id="loginPassword" placeholder="Password">
+                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility('loginPassword', this)">👁️</button>
+                </div>
+                <button type="button" class="btn-main-auth" onclick="loginUser()">Login</button>
+                <p>Belum ada akaun? <span onclick="toggleAuth()">Daftar Sekarang</span></p>
+            </div>
+
+            <div class="auth-box" id="registerBox" style="display: none;">
+                <h2>Daftar Akaun Baru</h2>
+                <input type="text" id="regUsername" placeholder="Username (Cth: pakcik_hunter)">
+                <input type="text" id="regBusinessName" placeholder="Nama Bisnes (Cth: Pakcik Hunter ML)">
+                <div class="password-wrapper">
+                    <input type="password" id="regPassword" placeholder="Password (Min 6 aksara)">
+                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility('regPassword', this)">👁️</button>
+                </div>
+                <button type="button" class="btn-main-auth" onclick="registerUser()">Daftar Akaun</button>
+                <p>Dah ada akaun? <span onclick="toggleAuth()">Log Masuk</span></p>
+            </div>
+        </div>
+
+        <!-- ================= DASHBOARD ================= -->
+        <div id="dashboardView" style="display: none; flex-direction: column; gap: 20px; width:100%;">
+            
+            <div class="role-toggle" id="roleToggle" style="display: flex;">
+                <button class="role-btn active" id="btnRoleAdmin" onclick="switchRole('admin')">Squad Panel (Admin)</button>
+                <button class="role-btn" id="btnRoleCust" onclick="switchRole('cust')">Live Tracker Awam</button>
+            </div>
+
+            <!-- ADMIN VIEW -->
+            <div id="adminView" class="admin-view">
+                <div class="share-box">
+                    <p>Hantar link ini kepada customer anda untuk paparan Live Tracker.</p>
+                    <button class="btn-share" onclick="copyPublicLink()">
+                        <span>🔗</span> Salin Link Live Tracker
+                    </button>
+                </div>
+                
+                <button class="btn-add-room" onclick="createNewRoomInstant()">+ BUAT ROOM SQUAD BARU</button>
+                <div id="roomListAdmin"></div>
+            </div>
+
+            <!-- CUSTOMER VIEW -->
+            <div id="custView" class="customer-view">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span>Jumlah Room</span>
+                        <strong id="totalRooms">0</strong>
+                    </div>
+                    <div class="stat-card highlight">
+                        <span>Baki Match</span>
+                        <strong id="totalMatches">0</strong>
+                    </div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <h3 style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px; font-family: var(--font-mono);">SENARAI ROOM SEMASA</h3>
+                    <div id="roomListCust"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ================= CUSTOM MODAL ================= -->
+    <div class="custom-modal-overlay" id="modalOverlay">
+        <div class="custom-modal">
+            <div class="custom-modal-icon">⚠️</div>
+            <h3 id="modalTitle">Padam Data?</h3>
+            <p id="modalDesc">Adakah anda pasti mahu memadam data ini?</p>
+            <div class="custom-modal-actions">
+                <button class="btn-custom-modal btn-custom-cancel" onclick="closeModal()">Batal</button>
+                <button class="btn-custom-modal btn-custom-danger" id="btnConfirmAction">Ya, Padam</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const JSONBIN_API_KEY = "$2a$10$vs5ZhQ2o7pGKs.XJH72lO.VEVSXfaB32R.5W9w8nDeHLAHE2dL.m"; 
+        const JSONBIN_BIN_ID = "6afc8e03ac6210605a8f5e20"; 
+
+        let cloudData = { users: [], rooms: {} }; 
+        let currentUser = null;
+        let rooms = []; 
+        
+        let pendingDeleteType = null; 
+        let pendingRoomId = null;
+        let pendingPlayerIndex = null;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const isPublicMode = urlParams.get('mode') === 'public';
+        const targetBusiness = urlParams.get('bisnes');
+
+        const themes = ['theme-dark', 'theme-matrix', 'theme-red'];
+        const themeIcons = ['🌙', '🟢', '🔴'];
+        let currentThemeIndex = 0;
+
+        function cycleTheme() {
+            currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+            document.body.className = themes[currentThemeIndex];
+            document.getElementById('themeToggleBtn').innerText = themeIcons[currentThemeIndex];
+            localStorage.setItem('mlbbTheme', themes[currentThemeIndex]); 
+        }
+        const savedTheme = localStorage.getItem('mlbbTheme');
+        if (savedTheme) { 
+            currentThemeIndex = themes.indexOf(savedTheme); 
+            if(currentThemeIndex === -1) currentThemeIndex = 0; 
+            document.body.className = themes[currentThemeIndex]; 
+            document.getElementById('themeToggleBtn').innerText = themeIcons[currentThemeIndex]; 
+        } else { 
+            document.body.className = themes[0]; 
+        }
+
+        function showToast(msg, color) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.background = color || 'var(--success)';
+            t.classList.add('show');
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => t.classList.remove('show'), 2000);
+        }
+
+        function openModal(title, desc, type, roomId, playerIndex = null) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalDesc').innerText = desc;
+            pendingDeleteType = type;
+            pendingRoomId = roomId;
+            pendingPlayerIndex = playerIndex;
+            document.getElementById('modalOverlay').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('show');
+            setTimeout(() => {
+                pendingDeleteType = null; pendingRoomId = null; pendingPlayerIndex = null;
+            }, 300);
+        }
+
+        function togglePasswordVisibility(inputId, btnElement) {
+            const input = document.getElementById(inputId);
+            if (input.type === "password") { 
+                input.type = "text"; 
+                btnElement.innerText = "🙈"; 
+            } else { 
+                input.type = "password"; 
+                btnElement.innerText = "👁️"; 
+            }
+        }
+
+        async function fetchCloudData() {
+            try {
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, { headers: { 'X-Master-Key': JSONBIN_API_KEY } });
+                const data = await response.json();
+                if (!data.record || !data.record.users) { cloudData = { users: [], rooms: {} }; } else { cloudData = data.record; }
+            } catch (error) { console.error("Gagal ambil data:", error); }
+        }
+
+        async function saveCloudData() {
+            try {
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_API_KEY },
+                    body: JSON.stringify(cloudData)
+                });
+                if (!response.ok) throw new Error("HTTP error");
+            } catch (error) { 
+                showToast("Gagal simpan ke Cloud!", "var(--danger)");
+            }
+        }
+
+        function toggleAuth() {
+            const loginBox = document.getElementById('loginBox'); const registerBox = document.getElementById('registerBox');
+            if (loginBox.style.display === 'none') { loginBox.style.display = 'block'; registerBox.style.display = 'none'; } else { loginBox.style.display = 'none'; registerBox.style.display = 'block'; }
+        }
+
+        async function registerUser() {
+            const username = document.getElementById('regUsername').value.trim().toLowerCase();
+            const businessName = document.getElementById('regBusinessName').value.trim();
+            const password = document.getElementById('regPassword').value;
+            if (!username || !businessName || password.length < 6) { alert("Sila lengkapkan maklumat. Password mesti 6 aksara ke atas."); return; }
+            if (cloudData.users.find(u => u.username === username)) { alert("Username ini dah digunakan."); return; }
+            const newUser = { username, businessName, password };
+            cloudData.users.push(newUser);
+            cloudData.rooms[username] = []; 
+            await saveCloudData(); 
+            alert("Pendaftaran Berjaya! Sila Log Masuk.");
+            toggleAuth(); document.getElementById('loginUsername').value = username;
+        }
+
+        function loginUser() {
+            const username = document.getElementById('loginUsername').value.trim().toLowerCase();
+            const password = document.getElementById('loginPassword').value;
+            const user = cloudData.users.find(u => u.username === username && u.password === password);
+            if (user) { 
+                currentUser = user; 
+                rooms = cloudData.rooms[currentUser.username] || []; 
+                checkSession(); 
+            } 
+            else { alert("Username atau Password Salah!"); }
+        }
+
+        function logout() { 
+            currentUser = null; rooms = []; 
+            document.getElementById('loginPassword').value = ''; 
+            checkSession(); 
+        }
+
+        function checkSession() {
+            const authView = document.getElementById('authView'); 
+            const dashboardView = document.getElementById('dashboardView'); 
+            const mainHeader = document.getElementById('mainHeader');
+            const roleToggle = document.getElementById('roleToggle');
+
+            if (isPublicMode) {
+                authView.style.display = 'none'; 
+                dashboardView.style.display = 'flex'; 
+                mainHeader.style.display = 'none'; 
+                if(roleToggle) roleToggle.style.display = 'none'; 
+                
+                document.getElementById('adminView').style.display = 'none'; 
+                document.getElementById('custView').style.display = 'block';
+                document.title = "Live Tracker Awam - Squad Status";
+                
+                renderUI();
+            } else if (currentUser) {
+                authView.style.display = 'none'; 
+                dashboardView.style.display = 'flex'; 
+                mainHeader.style.display = 'flex';
+                document.getElementById('businessNameDisplay').innerText = currentUser.businessName;
+                document.title = currentUser.businessName + " - Tracker"; 
+                
+                if(roleToggle) roleToggle.style.display = 'flex';
+                switchRole('admin');
+            } else {
+                authView.style.display = 'flex'; 
+                dashboardView.style.display = 'none'; 
+                mainHeader.style.display = 'none'; 
+                document.title = "MLBB Boosting SaaS - Tracker";
+            }
+        }
+
+        async function saveToCloud() {
+            if (currentUser) { cloudData.rooms[currentUser.username] = rooms; await saveCloudData(); }
+        }
+
+        function switchRole(role) {
+            if (role === 'admin') {
+                document.getElementById('adminView').style.display = 'block'; document.getElementById('custView').style.display = 'none';
+                document.getElementById('btnRoleAdmin').classList.add('active'); document.getElementById('btnRoleCust').classList.remove('active');
+            } else {
+                document.getElementById('adminView').style.display = 'none'; document.getElementById('custView').style.display = 'block';
+                document.getElementById('btnRoleAdmin').classList.remove('active'); document.getElementById('btnRoleCust').classList.add('active');
+            }
+            renderUI(); 
+        }
+
+        function copyPublicLink() {
+            if (!currentUser) return;
+            const baseUrl = window.location.origin + window.location.pathname;
+            const publicUrl = `${baseUrl}?mode=public&bisnes=${currentUser.username}`;
+            
+            navigator.clipboard.writeText(publicUrl).then(() => {
+                showToast("Link berjaya disalin! Hantar pada customer anda.");
+            }).catch(err => {
+                prompt("Salin link ini secara manual:", publicUrl);
+            });
+        }
+
+        async function createNewRoomInstant() {
+            const defaultMatch = 10;
+            const newRoom = {
+                id: Date.now(), roomName: "Room Baru " + (rooms.length + 1),
+                matchTotal: defaultMatch,
+                players: [{ name: '', id: '', rank: 'Epic', currentMatch: defaultMatch, maxMatch: defaultMatch }] 
+            };
+            rooms.unshift(newRoom); 
+            await saveToCloud();
+            renderUI();
+            showToast("Room baru berjaya ditambah!");
+        }
+
+        function generateRoomAdmin(room) {
+            let playersHTML = '';
+            room.players.forEach((p, i) => {
+                let maxMatch = p.maxMatch || room.matchTotal || 10; 
+                let isDone = p.currentMatch === 0;
+                let percent = maxMatch > 0 ? (p.currentMatch / maxMatch) * 100 : 0;
+                let barColor = isDone ? 'var(--danger)' : 'var(--success)';
+
+                const rankOptions = ['Epic', 'Legend', 'Mythic', 'Mythical Honor', 'Mythical Glory', 'Mythical Immortal'];
+                let rankSelectHTML = `<select class="select-rank-inline" onchange="updatePlayerRank(${room.id}, ${i}, this.value)">`;
+                rankOptions.forEach(r => {
+                    let playerRank = p.rank || 'Epic';
+                    rankSelectHTML += `<option value="${r}" ${playerRank === r ? 'selected' : ''}>${r}</option>`;
+                });
+                rankSelectHTML += `</select>`;
+
+                playersHTML += `
+                    <div class="player-item">
+                        <div class="player-header">
+                            <div class="player-info">
+                                <input type="text" class="input-player-name" placeholder="➕ Klik isi Nama Player..." value="${p.name}" onchange="updatePlayerData(${room.id}, ${i}, 'name', this.value)">
+                                <input type="text" class="input-player-id" placeholder="Klik isi ID ML..." value="${p.id}" onchange="updatePlayerData(${room.id}, ${i}, 'id', this.value)">
+                            </div>
+                            <div class="player-controls">
+                                <div class="max-match-box" title="Max Match Player Ini">
+                                    <span>Max:</span>
+                                    <input type="number" class="input-max-match" value="${maxMatch}" min="1" onchange="updatePlayerMax(${room.id}, ${i}, this.value)">
+                                </div>
+                                <button type="button" class="btn-del-player" onclick="promptDeletePlayer(${room.id}, ${i})" title="Buang Slot">🗑</button>
+                            </div>
+                        </div>
+                        <div class="player-rank-row">${rankSelectHTML}</div>
+                        <div class="slider-control-row">
+                            <button type="button" class="btn-slider-adjust" onclick="adjustMatchManual(${room.id}, ${i}, -1)">−</button>
+                            <input type="range" min="0" max="${maxMatch}" value="${p.currentMatch}" 
+                                   oninput="updatePlayerSlider(${room.id}, ${i}, this.value)"
+                                   onchange="savePlayerSlider(${room.id}, ${i}, this.value)"
+                                   style="background: linear-gradient(to right, ${barColor} ${percent}%, var(--bg-input) ${percent}%);">
+                            <button type="button" class="btn-slider-adjust" onclick="adjustMatchManual(${room.id}, ${i}, 1)">+</button>
+                        </div>
+                        <div style="text-align: right; font-family: var(--font-mono); font-weight: bold; font-size: 11px; margin-top: 5px; color: ${barColor}" id="val-${room.id}-${i}">
+                            ${p.currentMatch}/${maxMatch}
+                        </div>
+                    </div>
+                `;
+            });
+
+            return `
+                <div class="room-card" id="room-card-${room.id}">
+                    <div class="room-header-edit">
+                        <input type="text" class="input-room-name" value="${room.roomName}" placeholder="Nama Room..." onchange="updateRoomInfo(${room.id}, 'roomName', this.value)">
+                    </div>
+                    <div class="room-player-list">${playersHTML}</div>
+                    <div class="room-action-box">
+                        <button type="button" class="btn-room-action btn-add-slot" onclick="addPlayerSlot(${room.id})">+ Tambah Slot</button>
+                        <button type="button" class="btn-room-action btn-reduce-all" onclick="reduceOneMatchAll(${room.id})">- 1 Match</button>
+                        <button type="button" class="btn-room-action btn-delete-room" onclick="promptDeleteRoom(${room.id})">🗑 Hapus</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateRoomCust(room) {
+            let playersHTML = '';
+            room.players.forEach(p => {
+                let maxMatch = p.maxMatch || room.matchTotal || 10;
+                if (p.name.trim() !== "") { 
+                    let color = p.currentMatch === 0 ? 'var(--danger)' : 'var(--success)';
+                    playersHTML += `
+                        <div class="public-player">
+                            <span>${p.name} <span style="color:var(--text-muted); font-size:10px;">(${p.id} - ${p.rank || 'Epic'})</span></span> 
+                            <span style="color:${color}; font-weight:bold;">${p.currentMatch}/${maxMatch} Match</span>
+                        </div>
+                    `;
+                }
+            });
+            if (playersHTML === '') return '';
+            return `
+                <div class="public-card">
+                    <div class="public-card-header"><h3>${room.roomName}</h3></div>
+                    ${playersHTML}
+                </div>
+            `;
+        }
+
+        function renderUI() {
+            const listAdmin = document.getElementById('roomListAdmin');
+            const listCust = document.getElementById('roomListCust');
+            if(!listAdmin || !listCust) return;
+            listAdmin.innerHTML = ''; listCust.innerHTML = '';
+
+            let totalRooms = rooms.length;
+            let totalMatchGlobal = 0;
+
+            if (rooms.length === 0) {
+                listAdmin.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:20px; border:1px dashed var(--border-color); border-radius:12px; font-size:12px;">Tiada Room aktif. Tekan "+ BUAT ROOM" di atas.</div>';
+                listCust.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:20px; font-size:12px;">Tiada room aktif buat masa ini.</div>';
+                document.getElementById('totalRooms').innerText = "0";
+                document.getElementById('totalMatches').innerText = "0";
+                return;
+            }
+
+            rooms.forEach(room => {
+                room.players.forEach(p => { if(p.name.trim() !== "") totalMatchGlobal += p.currentMatch; });
+                listAdmin.innerHTML += generateRoomAdmin(room);
+                listCust.innerHTML += generateRoomCust(room);
+            });
+
+            document.getElementById('totalRooms').innerText = totalRooms;
+            document.getElementById('totalMatches').innerText = totalMatchGlobal;
+        }
+
+        function promptDeletePlayer(roomId, index) {
+            openModal("Buang Slot?", "Adakah anda pasti mahu buang slot player ini?", 'player', roomId, index);
+        }
+
+        function promptDeleteRoom(roomId) {
+            openModal("Padam Room?", "Adakah anda pasti mahu padam Room Squad ini? Data tidak boleh dikembalikan.", 'room', roomId);
+        }
+
+        document.getElementById('btnConfirmAction').addEventListener('click', async () => {
+            if (pendingDeleteType === 'player' && pendingRoomId !== null && pendingPlayerIndex !== null) {
+                const room = rooms.find(r => r.id === pendingRoomId);
+                if (room) {
+                    room.players.splice(pendingPlayerIndex, 1); 
+                    if(room.players.length === 0) {
+                         room.players.push({ name: '', id: '', rank: 'Epic', currentMatch: room.matchTotal, maxMatch: room.matchTotal });
+                    }
+                    renderUI();
+                    await saveToCloud();
+                    showToast("Slot player berjaya dibuang!", "var(--danger)");
+                }
+            } else if (pendingDeleteType === 'room' && pendingRoomId !== null) {
+                rooms = rooms.filter(r => r.id !== pendingRoomId);
+                renderUI();
+                await saveToCloud();
+                showToast("Room berjaya dipadam!", "var(--danger)");
+            }
+            closeModal();
+        });
+
+        async function addPlayerSlot(roomId) {
+            const room = rooms.find(r => r.id === roomId);
+            if(room) {
+                room.players.push({ name: '', id: '', rank: 'Epic', currentMatch: room.matchTotal, maxMatch: room.matchTotal });
+                renderUI(); await saveToCloud();
+            }
+        }
+
+        async function updatePlayerData(roomId, index, field, value) {
+            const room = rooms.find(r => r.id === roomId);
+            if(room) {
+                room.players[index][field] = value.trim();
+                await saveToCloud();
+                if(field === 'name') {
+                    let totalMatchGlobal = 0;
+                    rooms.forEach(rm => { rm.players.forEach(p => { if(p.name.trim() !== "") totalMatchGlobal += p.currentMatch; }); });
+                    document.getElementById('totalMatches').innerText = totalMatchGlobal;
+                }
+            }
+        }
+        
+        async function updateRoomInfo(roomId, field, value) {
+            const room = rooms.find(r => r.id === roomId);
+            if(room) { room[field] = value.trim(); await saveToCloud(); }
+        }
+
+        async function updatePlayerRank(roomId, index, rankValue) {
+            const room = rooms.find(r => r.id === roomId);
+            if(room) { room.players[index].rank = rankValue; await saveToCloud(); }
+        }
+
+        async function updatePlayerMax(roomId, index, newMax) {
+            const room = rooms.find(r => r.id === roomId);
+            if(room) {
+                let parsedMax = parseInt(newMax);
+                if(isNaN(parsedMax) || parsedMax < 1) parsedMax = 10; 
+                room.players[index].maxMatch = parsedMax;
+                if(room.players[index].currentMatch > parsedMax) room.players[index].currentMatch = parsedMax;
+                renderUI(); await saveToCloud();
+            }
+        }
+
+        function updatePlayerSlider(roomId, playerIndex, newValue) {
+            const room = rooms.find(r => r.id === roomId);
+            if(room) {
+                room.players[playerIndex].currentMatch = parseInt(newValue);
+                let maxMatch = room.players[playerIndex].maxMatch || room.matchTotal || 10;
+                const percent = (newValue / maxMatch) * 100;
+                const color = newValue == 0 ? 'var(--danger)' : 'var(--success)';
+                document.getElementById(`val-${roomId}-${playerIndex}`).innerText = `${newValue}/${maxMatch}`;
+                document.getElementById(`val-${roomId}-${playerIndex}`).style.color = color;
+                const slider = document.querySelector(`input[oninput="updatePlayerSlider(${roomId}, ${playerIndex}, this.value)"]`);
+                if(slider) slider.style.background = `linear-gradient(to right, ${color} ${percent}%, var(--bg-input) ${percent}%)`;
+            }
+        }
+
+        async function savePlayerSlider(roomId, playerIndex, newValue) {
+            const room = rooms.find(r => r.id === roomId);
+            if(room) { room.players[playerIndex].currentMatch = parseInt(newValue); await saveToCloud(); renderUI(); }
+        }
+
+        async function adjustMatchManual(roomId, playerIndex, amount) {
+            const room = rooms.find(r => r.id === roomId);
+            if(room) {
+                let p = room.players[playerIndex];
+                let newValue = p.currentMatch + amount;
+                let maxMatch = p.maxMatch || room.matchTotal || 10;
+                if(newValue > maxMatch) newValue = maxMatch;
+                if(newValue < 0) newValue = 0;
+                p.currentMatch = newValue;
+                renderUI(); await saveToCloud();
+            }
+        }
+
+        async function reduceOneMatchAll(roomId) {
+            const room = rooms.find(r => r.id === roomId);
+            if(room) {
+                room.players.forEach(p => { if (p.currentMatch > 0) p.currentMatch -= 1; });
+                renderUI(); await saveToCloud();
+                showToast("Match dikurangkan -1 untuk semua player!");
+            }
+        }
+
+        async function init() {
+            await fetchCloudData(); 
+            
+            if (isPublicMode) {
+                let allPublicRooms = [];
+                if (cloudData.rooms) {
+                    if (targetBusiness && cloudData.rooms[targetBusiness]) {
+                        let userRooms = cloudData.rooms[targetBusiness];
+                        if (Array.isArray(userRooms)) {
+                            allPublicRooms = userRooms;
+                        }
+                    } else {
+                        for (let username in cloudData.rooms) {
+                            let userRooms = cloudData.rooms[username];
+                            if (Array.isArray(userRooms)) {
+                                allPublicRooms = allPublicRooms.concat(userRooms);
+                            }
+                        }
+                    }
+                }
+                rooms = allPublicRooms;
+            }
+            
+            checkSession();
+        }
+
+        init();
+    </script>
+</body>
+</html>

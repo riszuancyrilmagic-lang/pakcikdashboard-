@@ -2,15 +2,11 @@
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
-    <!-- KUNCI SKRIN UNTUK PHONE -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MLBB Boosting SaaS - Squad Tracker</title>
-    <!-- Imbas Supabase Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* =================================================================
-           VARIABLES TEMA
-           ================================================================= */
+        /* --- CSS KAU KEKAL MACAM ASAL (TAK AKU USIK) --- */
         :root {
             --bg-main: #05080d; --bg-card: #0d1117; --bg-input: #010409;
             --border-color: #30363d; --text-main: #e6edf3; --text-muted: #8b949e;
@@ -32,52 +28,21 @@
             --accent-glow: rgba(255, 51, 51, 0.2); --success: #cc0000; --danger: #ff0000; --warning: #ff9900;
             --slot-empty-bg: #1f0a0a; --slot-empty-border: #5a2a2a;
         }
-
-        /* --- ASAS & KUNCI SKRIN PHONE --- */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
-        
-        html, body { 
-            overflow-x: hidden; 
-            touch-action: manipulation; 
-            width: 100%;
-        }
-
-        body { 
-            background-color: var(--bg-main); 
-            color: var(--text-main); 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            min-height: 100vh; 
-            padding: 15px; 
-            transition: background 0.3s, color 0.3s; 
-        }
-        
-        .container { 
-            width: 100%; 
-            max-width: 600px; 
-            margin: 0 auto; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 20px; 
-        }
-
-        /* --- HEADER --- */
+        html, body { overflow-x: hidden; touch-action: manipulation; width: 100%; }
+        body { background-color: var(--bg-main); color: var(--text-main); display: flex; flex-direction: column; justify-content: center; min-height: 100vh; padding: 15px; transition: background 0.3s, color 0.3s; }
+        .container { width: 100%; max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 15px; border-radius: 16px; border: 1px solid var(--border-color); flex-wrap: wrap; gap: 10px; }
         .header-left { display: flex; align-items: center; gap: 10px; }
         .logo { width: 40px; height: 40px; background-color: var(--bg-input); border-radius: 10px; display: flex; justify-content: center; align-items: center; border: 1px solid var(--border-color); overflow: hidden; padding: 0; }
         .logo img { width: 100%; height: 100%; object-fit: cover; }
         .title h1 { font-size: 16px; color: var(--text-main); font-weight: 800; font-family: var(--font-mono); }
         .title p { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-
-        /* --- BUTANG HEADER --- */
         .header-actions { display: flex; align-items: center; gap: 8px; }
         .btn-theme { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 14px; transition: 0.2s; }
         .btn-theme:hover { border-color: var(--accent-color); color: var(--accent-color); }
         .btn-auth { background-color: transparent; color: var(--text-muted); border: 1px solid var(--border-color); padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; font-family: var(--font-mono); }
         .btn-logout { color: var(--danger); }
-
-        /* --- PAPARAN AUTH --- */
         .auth-view { display: flex; flex-direction: column; gap: 15px; justify-content: center; align-items: center; min-height: 50vh; width: 100%; }
         .auth-box { background-color: var(--bg-card); padding: 20px; border-radius: 16px; border: 1px solid var(--border-color); width: 100%; max-width: 400px; text-align: center; }
         .auth-box h2 { margin-bottom: 15px; font-size: 18px; font-family: var(--font-mono); }
@@ -85,176 +50,79 @@
         .btn-main-auth { width: 100%; padding: 12px; background: var(--success); color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 10px; font-family: var(--font-mono); font-size: 14px;}
         .auth-box p { font-size: 12px; color: var(--text-muted); cursor: pointer; }
         .auth-box p span { color: var(--accent-color); font-weight: bold; }
-
-        /* --- PASSWORD TOPENG --- */
         .password-wrapper { position: relative; width: 100%; margin-bottom: 15px; }
         .password-wrapper input { margin-bottom: 0; padding-right: 45px; } 
         .toggle-password { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 18px; color: var(--text-muted); }
-
-        /* --- DASHBOARD --- */
         .role-toggle { display: none; background: var(--bg-input); border-radius: 8px; border: 1px solid var(--border-color); overflow: hidden; margin-top: 10px; width: 100%; }
         .role-btn { flex: 1; padding: 10px; font-size: 12px; border: none; background: transparent; color: var(--text-muted); cursor: pointer; font-weight: bold; font-family: var(--font-mono); }
         .role-btn.active { background: var(--bg-card); color: var(--accent-color); border-bottom: 2px solid var(--accent-color); }
-
         .admin-view { display: none; width: 100%; }
         .customer-view { display: none; width: 100%; }
-
-        /* --- ROOM CARD --- */
         .room-card { background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 16px; padding: 12px; margin-bottom: 20px; position: relative; width: 100%; }
-        
         .room-header-edit { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 12px; gap: 10px;}
         .input-room-name { background: transparent; border: none; border-bottom: 2px dashed var(--border-color); color: var(--warning); font-size: 15px; font-weight: 800; font-family: var(--font-mono); outline: none; width: 100%; padding-bottom: 5px; }
         .input-room-name:focus { border-bottom: 2px solid var(--warning); }
-        
-        /* --- SLOT PLAYER --- */
         .player-item { background: var(--slot-empty-bg); border-radius: 8px; border: 1px solid var(--slot-empty-border); padding: 10px; margin-bottom: 10px; transition: 0.2s; width: 100%; }
         .player-item:hover { border-color: var(--accent-color); }
-        
         .player-header { display: flex; justify-content: space-between; margin-bottom: 8px; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
         .player-info { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 140px; }
-        
-        .input-player-name, .input-player-id { 
-            background: transparent; border: none; color: var(--text-main); font-family: var(--font-mono); outline: none; 
-            border-bottom: 1px dashed var(--slot-empty-border); padding: 4px 0; transition: 0.2s; width: 100%;
-        }
+        .input-player-name, .input-player-id { background: transparent; border: none; color: var(--text-main); font-family: var(--font-mono); outline: none; border-bottom: 1px dashed var(--slot-empty-border); padding: 4px 0; transition: 0.2s; width: 100%; }
         .input-player-name:focus, .input-player-id:focus { border-bottom: 2px solid var(--accent-color); background: rgba(88,166,255,0.05); }
         .input-player-name { font-size: 13px; font-weight: bold; }
         .input-player-id { font-size: 11px; color: var(--text-muted); }
         .input-player-name::placeholder, .input-player-id::placeholder { color: var(--text-muted); opacity: 0.7; font-style: italic; }
-
         .player-controls { display: flex; align-items: center; gap: 8px; }
         .max-match-box { display: flex; align-items: center; gap: 4px; background: var(--bg-main); padding: 4px 6px; border-radius: 6px; border: 1px solid var(--border-color); }
         .max-match-box span { font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); }
         .input-max-match { background: transparent; border: none; color: var(--text-main); font-family: var(--font-mono); font-weight: bold; width: 28px; text-align: center; outline: none; font-size: 12px;}
         .input-max-match:focus { color: var(--accent-color); }
-
-        .btn-del-player { 
-            background: transparent; border: none; color: var(--danger); cursor: pointer; font-size: 14px; padding: 4px;
-            display: flex; align-items: center; justify-content: center; transition: 0.2s; z-index: 10;
-        }
+        .btn-del-player { background: transparent; border: none; color: var(--danger); cursor: pointer; font-size: 14px; padding: 4px; display: flex; align-items: center; justify-content: center; transition: 0.2s; z-index: 10; }
         .btn-del-player:hover { color: #ff9999; transform: scale(1.1); }
-
-        /* --- RANK SELECT DALAM PLAYER --- */
         .player-rank-row { margin-top: 5px; margin-bottom: 8px; }
-        .select-rank-inline {
-            width: 100%; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--accent-color);
-            font-family: var(--font-mono); font-size: 11px; padding: 5px 8px; border-radius: 6px; outline: none; cursor: pointer;
-        }
-
-        /* --- SLIDER + BUTANG - / + --- */
+        .select-rank-inline { width: 100%; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--accent-color); font-family: var(--font-mono); font-size: 11px; padding: 5px 8px; border-radius: 6px; outline: none; cursor: pointer; }
         .slider-control-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; width: 100%; }
         .btn-slider-adjust { background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); width: 26px; height: 26px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; display: flex; justify-content: center; align-items: center; transition: 0.2s; font-family: var(--font-mono); flex-shrink: 0;}
         .btn-slider-adjust:hover { background: var(--border-color); color: var(--accent-color); }
         .btn-slider-adjust:active { background: var(--accent-color); color: #000; }
-        
         input[type=range] { -webkit-appearance: none; flex: 1; background: transparent; height: 8px; width: 100%; min-width: 0; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: #ffffff; cursor: pointer; margin-top: -3px; border: 2px solid var(--accent-color); box-shadow: 0 0 8px rgba(255,255,255,0.4); }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; border-radius: 4px; }
-
-        /* --- BUTANG TINDAKAN ROOM --- */
         .room-action-box { display: flex; gap: 8px; margin-top: 12px; border-top: 1px dashed var(--border-color); padding-top: 12px; flex-wrap: wrap; align-items: stretch; width: 100%;}
         .btn-room-action { padding: 8px; border-radius: 8px; border: none; font-weight: bold; font-family: var(--font-mono); cursor: pointer; transition: 0.2s; font-size: 11px; display: flex; justify-content: center; align-items: center; flex: 1; min-width: 70px;}
-        
         .btn-add-slot { background-color: var(--accent-glow); color: var(--accent-color); border: 1px dashed var(--accent-color); z-index: 10;}
         .btn-add-slot:hover { background-color: var(--accent-color); color: #000; }
-        
         .btn-reduce-all { background-color: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color); }
         .btn-reduce-all:hover { background-color: var(--border-color); }
-        
-        .btn-delete-room { 
-            background-color: rgba(248, 81, 73, 0.1); color: var(--danger); border: 1px solid rgba(248, 81, 73, 0.3); 
-            z-index: 10; flex: 0.5;
-        }
+        .btn-delete-room { background-color: rgba(248, 81, 73, 0.1); color: var(--danger); border: 1px solid rgba(248, 81, 73, 0.3); z-index: 10; flex: 0.5; }
         .btn-delete-room:hover { background-color: rgba(248, 81, 73, 0.2); }
-
-        /* --- CUSTOMER VIEW --- */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
         .stat-card { background-color: var(--bg-card); padding: 12px; border-radius: 14px; border: 1px solid var(--border-color); }
         .stat-card span { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);}
         .stat-card strong { font-size: 18px; color: var(--text-main); font-family: var(--font-mono); }
         .stat-card.highlight { border-color: var(--success); }
         .stat-card.highlight strong { color: var(--success); }
-
         .public-card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 12px; margin-bottom: 12px; width: 100%; }
         .public-card-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
         .public-card-header h3 { font-size: 14px; font-family: var(--font-mono); color: var(--accent-color); }
         .public-player { display: flex; justify-content: space-between; font-size: 11px; font-family: var(--font-mono); padding: 4px 0; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 5px;}
-
-        /* --- BUTANG TAMBAH ROOM BESAR --- */
         .btn-add-room { background-color: var(--warning); color: #000; border: none; width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; font-family: var(--font-mono); cursor: pointer; margin-bottom: 15px; font-size: 13px;}
-
-        /* --- KOTAK BUTANG SHARE LINK --- */
-        .share-box {
-            background: var(--bg-card);
-            border: 1px dashed var(--accent-color);
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            width: 100%;
-        }
-        .share-box p {
-            font-size: 11px;
-            color: var(--text-muted);
-            text-align: center;
-            font-family: var(--font-mono);
-        }
-        .btn-share { 
-            background-color: var(--accent-glow); 
-            color: var(--accent-color); 
-            border: 1px solid var(--accent-color); 
-            padding: 10px; 
-            border-radius: 8px; 
-            font-weight: bold; 
-            font-family: var(--font-mono); 
-            cursor: pointer; 
-            width: 100%; 
-            transition: 0.2s;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-        }
-        .btn-share:hover { 
-            background-color: var(--accent-color); 
-            color: #000; 
-        }
-
-        /* =================================================================
-           POPUP MODAL
-           ================================================================= */
-        .custom-modal-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(4px);
-            display: flex; justify-content: center; align-items: center;
-            z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
-            padding: 20px;
-        }
+        .share-box { background: var(--bg-card); border: 1px dashed var(--accent-color); border-radius: 12px; padding: 12px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; width: 100%; }
+        .share-box p { font-size: 11px; color: var(--text-muted); text-align: center; font-family: var(--font-mono); }
+        .btn-share { background-color: var(--accent-glow); color: var(--accent-color); border: 1px solid var(--accent-color); padding: 10px; border-radius: 8px; font-weight: bold; font-family: var(--font-mono); cursor: pointer; width: 100%; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px; font-size: 12px; }
+        .btn-share:hover { background-color: var(--accent-color); color: #000; }
+        .custom-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; padding: 20px; }
         .custom-modal-overlay.show { opacity: 1; pointer-events: auto; }
-
-        .custom-modal {
-            background: var(--bg-card); border: 1px solid var(--border-color);
-            border-radius: 16px; width: 100%; max-width: 350px; padding: 20px;
-            text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            transform: translateY(20px) scale(0.95); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
+        .custom-modal { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; width: 100%; max-width: 350px; padding: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); transform: translateY(20px) scale(0.95); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .custom-modal-overlay.show .custom-modal { transform: translateY(0) scale(1); }
-
         .custom-modal-icon { font-size: 35px; margin-bottom: 15px; color: var(--danger); }
         .custom-modal h3 { font-size: 16px; color: var(--text-main); margin-bottom: 10px; font-family: var(--font-mono); }
         .custom-modal p { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
-
         .custom-modal-actions { display: flex; gap: 10px; justify-content: center; }
         .btn-custom-modal { flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: bold; font-family: var(--font-mono); cursor: pointer; transition: 0.2s; font-size: 12px;}
         .btn-custom-cancel { background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color); }
         .btn-custom-cancel:hover { background: var(--border-color); }
         .btn-custom-danger { background: rgba(248, 81, 73, 0.15); color: var(--danger); border: 1px solid rgba(248, 81, 73, 0.4); }
         .btn-custom-danger:hover { background: var(--danger); color: #fff; box-shadow: 0 0 15px rgba(248, 81, 73, 0.4); }
-
-        /* --- TOAST NOTIFICATION --- */
         .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--success); color: #fff; padding: 12px 24px; border-radius: 8px; font-family: var(--font-mono); font-size: 12px; font-weight: bold; z-index: 2000; opacity: 0; transition: all 0.3s ease; pointer-events: none; text-align: center; width: 80%; max-width: 300px; }
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
     </style>
@@ -262,7 +130,6 @@
 <body class="theme-dark">
 
     <div class="container">
-        <!-- HEADER -->
         <div class="header" id="mainHeader" style="display: none;">
             <div class="header-left">
                 <div class="logo"><img src="https://i.postimg.cc/k5gkbnXQ/background.png" alt="Logo"></div>
@@ -277,7 +144,6 @@
             </div>
         </div>
 
-        <!-- ================= LOGIN / DAFTAR ================= -->
         <div id="authView" class="auth-view">
             <div class="header" style="width:100%; max-width: 400px; justify-content: center;">
                 <div class="header-left">
@@ -310,15 +176,12 @@
             </div>
         </div>
 
-        <!-- ================= DASHBOARD ================= -->
         <div id="dashboardView" style="display: none; flex-direction: column; gap: 20px; width:100%;">
-            
             <div class="role-toggle" id="roleToggle" style="display: flex;">
                 <button class="role-btn active" id="btnRoleAdmin" onclick="switchRole('admin')">Squad Panel (Admin)</button>
                 <button class="role-btn" id="btnRoleCust" onclick="switchRole('cust')">Live Tracker Awam</button>
             </div>
 
-            <!-- ADMIN VIEW -->
             <div id="adminView" class="admin-view">
                 <div class="share-box">
                     <p>Hantar link ini kepada customer anda untuk paparan Live Tracker.</p>
@@ -331,7 +194,6 @@
                 <div id="roomListAdmin"></div>
             </div>
 
-            <!-- CUSTOMER VIEW -->
             <div id="custView" class="customer-view">
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -351,7 +213,6 @@
         </div>
     </div>
     
-    <!-- ================= CUSTOM MODAL ================= -->
     <div class="custom-modal-overlay" id="modalOverlay">
         <div class="custom-modal">
             <div class="custom-modal-icon">⚠️</div>
@@ -363,24 +224,18 @@
             </div>
         </div>
     </div>
-
-    <!-- TOAST -->
     <div class="toast" id="toast"></div>
 
     <script>
         // ==========================================
-        // KONFIGURASI SUPABASE (GANTIKAN JSONBIN)
+        // KONFIGURASI SUPABASE (PASTIKAN HANYA 1 KALI)
         // ==========================================
         const supabaseUrl = 'https://izwrbejoaumkgsyxjxe.supabase.co';
         const supabaseKey = 'sb_publishable___Kj6jkZGrCaj5DwvQiRHw_0mPKsbOZ'; 
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        // ==========================================
-        // STATE & PEMBOLEH UBAH
-        // ==========================================
         let currentUser = null; 
         let rooms = []; 
-        
         let pendingDeleteType = null; 
         let pendingRoomId = null;
         let pendingPlayerIndex = null;
@@ -389,7 +244,6 @@
         const isPublicMode = urlParams.get('mode') === 'public';
         const targetBusiness = urlParams.get('bisnes'); 
 
-        // --- TEMA ---
         const themes = ['theme-dark', 'theme-matrix', 'theme-red'];
         const themeIcons = ['🌙', '🟢', '🔴'];
         let currentThemeIndex = 0;
@@ -410,7 +264,6 @@
             document.body.className = themes[0]; 
         }
 
-        // --- TOAST & MODAL FUNCTIONS ---
         function showToast(msg, color) {
             const t = document.getElementById('toast');
             t.innerText = msg;
@@ -436,7 +289,6 @@
             }, 300);
         }
 
-        // --- PASSWORD TOPENG ---
         function togglePasswordVisibility(inputId, btnElement) {
             const input = document.getElementById(inputId);
             if (input.type === "password") { 
@@ -448,7 +300,6 @@
             }
         }
 
-        // --- AUTH (SUPABASE) ---
         function toggleAuth() {
             const loginBox = document.getElementById('loginBox'); const registerBox = document.getElementById('registerBox');
             if (loginBox.style.display === 'none') { loginBox.style.display = 'block'; registerBox.style.display = 'none'; } else { loginBox.style.display = 'none'; registerBox.style.display = 'block'; }
@@ -574,7 +425,6 @@
             renderUI(); 
         }
 
-        // --- SALIN LINK PUBLIC ---
         function copyPublicLink() {
             if (!currentUser) return;
             const baseUrl = window.location.origin + window.location.pathname;
@@ -587,17 +437,18 @@
             });
         }
 
-        // =====================================================================
-        // DATABASE FUNCTIONS (SUPABASE)
-        // =====================================================================
         async function fetchAdminRooms() {
             if (!currentUser) return;
             const { data, error } = await supabase.from('rooms').select('*').eq('user_id', currentUser.id).order('id', { ascending: false });
-            if (data) rooms = data;
+            if (data) rooms = data.map(r => ({
+                id: r.id,
+                roomName: r.room_name,
+                matchTotal: r.match_total,
+                players: r.players
+            }));
         }
 
         async function fetchPublicRooms() {
-            // Public mode fetch (filtered by username in URL)
             let query = supabase.from('rooms').select('*, profiles!inner(username)').order('id', { ascending: false });
             
             if (targetBusiness) {
@@ -606,7 +457,6 @@
             
             const { data, error } = await query;
             if (data) {
-                // Map back room_name to roomName and match_total to matchTotal to match existing UI code
                 rooms = data.map(r => ({
                     id: r.id,
                     roomName: r.room_name,
@@ -639,9 +489,6 @@
             showToast("Room baru berjaya ditambah!");
         }
 
-        // =====================================================================
-        // RENDER FUNCTIONS
-        // =====================================================================
         function generateRoomAdmin(room) {
             let playersHTML = '';
             room.players.forEach((p, i) => {
@@ -755,7 +602,6 @@
             document.getElementById('totalMatches').innerText = totalMatchGlobal;
         }
 
-        // --- TINDAKAN HAPUS (Pemicu Modal) ---
         function promptDeletePlayer(roomId, index) {
             openModal("Buang Slot?", "Adakah anda pasti mahu buang slot player ini?", 'player', roomId, index);
         }
@@ -764,7 +610,6 @@
             openModal("Padam Room?", "Adakah anda pasti mahu padam Room Squad ini? Data tidak boleh dikembalikan.", 'room', roomId);
         }
 
-        // --- BUTANG "YA, PADAM" DI DALAM MODAL ---
         document.getElementById('btnConfirmAction').addEventListener('click', async () => {
             if (pendingDeleteType === 'player' && pendingRoomId !== null && pendingPlayerIndex !== null) {
                 const room = rooms.find(r => r.id === pendingRoomId);
@@ -788,9 +633,6 @@
             closeModal();
         });
 
-        // =====================================================================
-        // FUNGSI EDIT & SAVE (SUPABASE)
-        // =====================================================================
         async function saveRoomToSupabase(room) {
             const { error } = await supabase.from('rooms').update({ 
                 room_name: room.roomName, 
@@ -896,9 +738,6 @@
             }
         }
 
-        // =====================================================================
-        // INIT (SEMAK SESSION SUPAYA TAK LOGOUT BILA REFRESH)
-        // =====================================================================
         async function init() {
             const { data: { session } } = await supabase.auth.getSession();
             if(session) {

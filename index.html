@@ -35,8 +35,8 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
         
         html, body { 
-            overflow-x: hidden; /* Halang skrol kiri kanan */
-            touch-action: manipulation; /* Halang double-tap zoom */
+            overflow-x: hidden; 
+            touch-action: manipulation; 
             width: 100%;
         }
 
@@ -366,7 +366,10 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        const JSONBIN_API_KEY = "$2a$10$vs5ZhQ2o7pGKs.XJH72lO.VEVSXfaB32R.5W9w8nDeHLAHE2dL.m"; 
+        // ==========================================
+        // ⚠️ ISI ACCESS KEY BARU ANDA DI SINI ⚠️
+        // ==========================================
+        const JSONBIN_ACCESS_KEY = "MASUKKAN_ACCESS_KEY_BARU_ANDA_DI_SINI"; 
         const JSONBIN_BIN_ID = "6afd36aeffd5d16053ca65dd"; 
 
         let cloudData = { users: [], rooms: {} }; 
@@ -437,23 +440,43 @@
             }
         }
 
+        // Menggunakan X-Access-Key (Lebih Selamat untuk Frontend)
         async function fetchCloudData() {
             try {
-                const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, { headers: { 'X-Master-Key': JSONBIN_API_KEY } });
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, { 
+                    headers: { 'X-Access-Key': JSONBIN_ACCESS_KEY } 
+                });
+                if (!response.ok) throw new Error("HTTP Error: " + response.status);
+                
                 const data = await response.json();
-                if (!data.record || !data.record.users) { cloudData = { users: [], rooms: {} }; } else { cloudData = data.record; }
-            } catch (error) { console.error("Gagal ambil data:", error); }
+                if (!data.record || !data.record.users) { 
+                    cloudData = { users: [], rooms: {} }; 
+                } else { 
+                    cloudData = data.record; 
+                }
+            } catch (error) { 
+                console.error("Gagal ambil data:", error); 
+                showToast("Gagal tarik data dari Cloud!", "var(--danger)");
+            }
         }
 
         async function saveCloudData() {
             try {
                 const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_API_KEY },
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'X-Access-Key': JSONBIN_ACCESS_KEY // Guna Access Key
+                    },
                     body: JSON.stringify(cloudData)
                 });
-                if (!response.ok) throw new Error("HTTP error");
+                if (!response.ok) {
+                    const errDetails = await response.json();
+                    console.error("Error details:", errDetails);
+                    throw new Error("HTTP error: " + response.status);
+                }
             } catch (error) { 
+                console.error(error);
                 showToast("Gagal simpan ke Cloud!", "var(--danger)");
             }
         }

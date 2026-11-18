@@ -367,9 +367,9 @@
 
     <script>
         // ==========================================
-        // ⚠️ ISI ACCESS KEY BARU ANDA DI SINI ⚠️
+        // KUNCI AKSES & ID BIN (DAH DIKEMAS KINI)
         // ==========================================
-        const JSONBIN_ACCESS_KEY = "MASUKKAN_ACCESS_KEY_BARU_ANDA_DI_SINI"; 
+        const JSONBIN_ACCESS_KEY = "$2a$10$9tvQukd6KauXb61CYxkf9.Ep0egoB96QcrcVMuP0R3K.FkFcT8M9q"; 
         const JSONBIN_BIN_ID = "6afd36aeffd5d16053ca65dd"; 
 
         let cloudData = { users: [], rooms: {} }; 
@@ -440,7 +440,7 @@
             }
         }
 
-        // Menggunakan X-Access-Key (Lebih Selamat untuk Frontend)
+        // Fungsi Ambil Data (Guna X-Access-Key)
         async function fetchCloudData() {
             try {
                 const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, { 
@@ -460,13 +460,14 @@
             }
         }
 
+        // Fungsi Simpan Data (Guna X-Access-Key)
         async function saveCloudData() {
             try {
                 const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
                     method: 'PUT',
                     headers: { 
                         'Content-Type': 'application/json', 
-                        'X-Access-Key': JSONBIN_ACCESS_KEY // Guna Access Key
+                        'X-Access-Key': JSONBIN_ACCESS_KEY 
                     },
                     body: JSON.stringify(cloudData)
                 });
